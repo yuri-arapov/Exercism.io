@@ -51,7 +51,7 @@ func matchCI(a, b string) bool {
 
 // Return index of string 's' in slice 'notes'.
 // Return -1 if not found.
-// Compare strings case insensitive.
+// Compare strings via 'match' fnction.
 func indexOf(s string, notes []string, match matchF) int {
 	for i := range notes {
 		if match(s, notes[i]) {
