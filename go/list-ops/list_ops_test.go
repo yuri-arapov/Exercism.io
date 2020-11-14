@@ -1,16 +1,15 @@
 package listops
 
 import (
-	"reflect"
 	"testing"
 )
 
 var foldTestCases = []struct {
 	name     string
 	property string
-	fn       binFunc
+	fn       func(a, b int) int
 	initial  int
-	list     IntList
+	list     []int
 	want     int
 }{
 	{
@@ -66,25 +65,24 @@ var foldTestCases = []struct {
 func TestFold(t *testing.T) {
 	var got int
 	for _, tt := range foldTestCases {
+		list := MakeList(tt.list...)
 		if tt.property == "foldr" {
-			got = tt.list.Foldr(tt.fn, tt.initial)
+			got = list.Foldr(tt.fn, tt.initial)
 		} else {
-			got = tt.list.Foldl(tt.fn, tt.initial)
+			got = list.Foldl(tt.fn, tt.initial)
 		}
 		if got != tt.want {
 			t.Fatalf("FAIL: %s: %q -- expected: %d, actual: %d", tt.property, tt.name, tt.want, got)
 		} else {
 			t.Logf("PASS: %s: %s", tt.property, tt.name)
 		}
-
 	}
-
 }
 
 var filterTestCases = []struct {
 	name     string
 	property string
-	fn       predFunc
+	fn       func(int) bool
 	list     []int
 	want     []int
 }{
@@ -106,21 +104,21 @@ var filterTestCases = []struct {
 
 func TestFilterMethod(t *testing.T) {
 	for _, tt := range filterTestCases {
-		in := IntList(tt.list)
+		in := MakeList(tt.list...)
 		got := in.Filter(tt.fn)
-		if !reflect.DeepEqual(IntList(tt.want), got) {
-			t.Fatalf("FAIL: %s: %q -- expected: %v, actual: %v", tt.property, tt.name, tt.want, got)
+		want := MakeList(tt.want...)
+		if !Equal(want, got) {
+			t.Fatalf("FAIL: %s: %q -- expected: %v, actual: %v", tt.property, tt.name, want, got)
 		} else {
 			t.Logf("PASS: %s: %s", tt.property, tt.name)
 		}
-
 	}
 }
 
 var lengthTestCases = []struct {
 	name     string
 	property string
-	list     IntList
+	list     []int
 	want     int
 }{
 	{
@@ -139,22 +137,21 @@ var lengthTestCases = []struct {
 
 func TestLengthMethod(t *testing.T) {
 	for _, tt := range lengthTestCases {
-		got := tt.list.Length()
+		got := MakeList(tt.list...).Length()
 		if tt.want != got {
 			t.Fatalf("FAIL: %s: %q -- expected: %d, actual: %d", tt.property, tt.name, tt.want, got)
 		} else {
 			t.Logf("PASS: %s: %s", tt.property, tt.name)
 		}
-
 	}
 }
 
 var mapTestCases = []struct {
 	name     string
 	property string
-	list     IntList
-	fn       unaryFunc
-	want     IntList
+	list     []int
+	fn       func(int) int
+	want     []int
 }{
 	{
 		name:     "empty list",
@@ -174,9 +171,10 @@ var mapTestCases = []struct {
 
 func TestMapMethod(t *testing.T) {
 	for _, tt := range mapTestCases {
-		got := tt.list.Map(tt.fn)
-		if !reflect.DeepEqual(tt.want, got) {
-			t.Fatalf("FAIL: %s: %q -- expected: %v, actual: %v", tt.property, tt.name, tt.want, got)
+		got := MakeList(tt.list...).Map(tt.fn)
+		want := MakeList(tt.want...)
+		if !Equal(want, got) {
+			t.Fatalf("FAIL: %s: %q -- expected: %v, actual: %v", tt.property, tt.name, want, got)
 		} else {
 			t.Logf("PASS: %s: %s", tt.property, tt.name)
 		}
@@ -187,8 +185,8 @@ func TestMapMethod(t *testing.T) {
 var reverseTestCases = []struct {
 	name     string
 	property string
-	list     IntList
-	want     IntList
+	list     []int
+	want     []int
 }{
 	{
 		name:     "empty list",
@@ -206,22 +204,22 @@ var reverseTestCases = []struct {
 
 func TestReverseMethod(t *testing.T) {
 	for _, tt := range reverseTestCases {
-		got := tt.list.Reverse()
-		if !reflect.DeepEqual(tt.want, got) {
-			t.Fatalf("FAIL: %s: %q -- expected: %v, actual: %v", tt.property, tt.name, tt.want, got)
+		got := MakeList(tt.list...).Reverse()
+		want := MakeList(tt.want...)
+		if !Equal(want, got) {
+			t.Fatalf("FAIL: %s: %q -- expected: %v, actual: %v", tt.property, tt.name, want, got)
 		} else {
 			t.Logf("PASS: %s: %s", tt.property, tt.name)
 		}
-
 	}
 }
 
 var appendTestCases = []struct {
 	name       string
 	property   string
-	list       IntList
-	appendThis IntList
-	want       IntList
+	list       []int
+	appendThis []int
+	want       []int
 }{
 	{
 		name:       "empty list",
@@ -248,44 +246,49 @@ var appendTestCases = []struct {
 
 func TestAppendMethod(t *testing.T) {
 	for _, tt := range appendTestCases {
-		got := tt.list.Append(tt.appendThis)
-		if !reflect.DeepEqual(tt.want, got) {
-			t.Fatalf("FAIL: %s: %q -- expected: %v, actual: %v", tt.property, tt.name, tt.want, got)
+		got := MakeList(tt.list...).Append(MakeList(tt.appendThis...))
+		want := MakeList(tt.want...)
+		if !Equal(want, got) {
+			t.Fatalf("FAIL: %s: %q -- expected: %v, actual: %v", tt.property, tt.name, want, got)
 		} else {
 			t.Logf("PASS: %s: %s", tt.property, tt.name)
 		}
-
 	}
 }
 
 var concatTestCases = []struct {
 	name     string
 	property string
-	list     IntList
-	args     []IntList
-	want     IntList
+	list     []int
+	args     [][]int
+	want     []int
 }{
 	{
 		name:     "empty list",
 		property: "concat",
 		list:     []int{},
-		args:     []IntList{},
+		args:     [][]int{},
 		want:     []int{},
 	},
 	{
 		name:     "list of lists",
 		property: "concat",
 		list:     []int{1, 2},
-		args:     []IntList{[]int{3}, []int{}, []int{4, 5, 6}},
+		args:     [][]int{[]int{3}, []int{}, []int{4, 5, 6}},
 		want:     []int{1, 2, 3, 4, 5, 6},
 	},
 }
 
 func TestConcatMethod(t *testing.T) {
 	for _, tt := range concatTestCases {
-		got := tt.list.Concat(tt.args)
-		if !reflect.DeepEqual(tt.want, got) {
-			t.Fatalf("FAIL: %s: %q -- expected: %v, actual: %v", tt.property, tt.name, tt.want, got)
+		var args []*IntList
+		for _, a := range tt.args {
+			args = append(args, MakeList(a...))
+		}
+		got := MakeList(tt.list...).Concat(args...)
+		want := MakeList(tt.want...)
+		if !Equal(want, got) {
+			t.Fatalf("FAIL: %s: %q -- expected: %v, actual: %v", tt.property, tt.name, want, got)
 		} else {
 			t.Logf("PASS: %s: %s", tt.property, tt.name)
 		}
